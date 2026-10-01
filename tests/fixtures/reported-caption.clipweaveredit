@@ -1,0 +1,266 @@
+{
+  "package_version": 1,
+  "edit": {
+    "schema_version": 4,
+    "project_id": "00000000-0000-4000-8000-000000000001",
+    "title": "Caption fitting regression",
+    "aspect": "source",
+    "fps": "source",
+    "transition_style": "cut",
+    "clips": [
+      {
+        "source_id": "CLIP_001",
+        "start": 0,
+        "end": 90
+      }
+    ],
+    "caption_styles": {
+      "celebration": {
+        "font_size": 0.052,
+        "emphasis_scale": 1.45,
+        "emphasis_color": "#363B43",
+        "contrast_backing": true,
+        "entrance": {
+          "type": "none"
+        }
+      }
+    },
+    "captions": [
+      {
+        "style": "celebration",
+        "x": 0.12,
+        "y": 0.14,
+        "width": 0.72,
+        "height": 0.22,
+        "alignment": "center",
+        "words": [
+          {
+            "text": "READY",
+            "start": 0.4,
+            "end": 4.8,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "left",
+              "duration": 0.32,
+              "distance": 0.035
+            }
+          },
+          {
+            "text": "TO",
+            "start": 0.62,
+            "end": 4.8,
+            "entrance": {
+              "type": "fade",
+              "duration": 0.24
+            }
+          },
+          {
+            "text": "CELEBRATE",
+            "start": 0.84,
+            "end": 4.8,
+            "style": "emphasis",
+            "line_break_before": true,
+            "entrance": {
+              "type": "slide",
+              "direction": "right",
+              "duration": 0.34,
+              "distance": 0.04
+            }
+          }
+        ]
+      },
+      {
+        "style": "celebration",
+        "x": 0.12,
+        "y": 0.15,
+        "width": 0.72,
+        "height": 0.22,
+        "alignment": "center",
+        "words": [
+          {
+            "text": "SPIN.",
+            "start": 16.35,
+            "end": 20.6,
+            "entrance": {
+              "type": "slide",
+              "direction": "left",
+              "duration": 0.28,
+              "distance": 0.03
+            }
+          },
+          {
+            "text": "SMILE.",
+            "start": 16.57,
+            "end": 20.6,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "up",
+              "duration": 0.34,
+              "distance": 0.035
+            }
+          },
+          {
+            "text": "REPEAT.",
+            "start": 16.82,
+            "end": 20.6,
+            "line_break_before": true,
+            "entrance": {
+              "type": "slide",
+              "direction": "right",
+              "duration": 0.3,
+              "distance": 0.03
+            }
+          }
+        ]
+      },
+      {
+        "style": "celebration",
+        "x": 0.11,
+        "y": 0.14,
+        "width": 0.74,
+        "height": 0.24,
+        "alignment": "center",
+        "words": [
+          {
+            "text": "GOOD",
+            "start": 37.55,
+            "end": 42.0,
+            "entrance": {
+              "type": "fade",
+              "duration": 0.22
+            }
+          },
+          {
+            "text": "PEOPLE.",
+            "start": 37.76,
+            "end": 42.0,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "right",
+              "duration": 0.32,
+              "distance": 0.035
+            }
+          },
+          {
+            "text": "BIG",
+            "start": 37.99,
+            "end": 42.0,
+            "line_break_before": true,
+            "entrance": {
+              "type": "slide",
+              "direction": "left",
+              "duration": 0.28,
+              "distance": 0.03
+            }
+          },
+          {
+            "text": "ENERGY.",
+            "start": 38.2,
+            "end": 42.0,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "up",
+              "duration": 0.35,
+              "distance": 0.04
+            }
+          }
+        ]
+      },
+      {
+        "style": "celebration",
+        "x": 0.13,
+        "y": 0.14,
+        "width": 0.7,
+        "height": 0.23,
+        "alignment": "center",
+        "words": [
+          {
+            "text": "ONE",
+            "start": 58.8,
+            "end": 63.1,
+            "entrance": {
+              "type": "slide",
+              "direction": "left",
+              "duration": 0.27,
+              "distance": 0.03
+            }
+          },
+          {
+            "text": "NIGHT.",
+            "start": 59.02,
+            "end": 63.1,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "right",
+              "duration": 0.34,
+              "distance": 0.04
+            }
+          },
+          {
+            "text": "ALL",
+            "start": 59.25,
+            "end": 63.1,
+            "line_break_before": true,
+            "entrance": {
+              "type": "fade",
+              "duration": 0.24
+            }
+          },
+          {
+            "text": "IN.",
+            "start": 59.47,
+            "end": 63.1,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "up",
+              "duration": 0.32,
+              "distance": 0.035
+            }
+          }
+        ]
+      },
+      {
+        "style": "celebration",
+        "x": 0.12,
+        "y": 0.14,
+        "width": 0.72,
+        "height": 0.22,
+        "alignment": "center",
+        "words": [
+          {
+            "text": "STRONGER",
+            "start": 80.0,
+            "end": 85.0,
+            "style": "emphasis",
+            "entrance": {
+              "type": "slide",
+              "direction": "left",
+              "duration": 0.36,
+              "distance": 0.04
+            }
+          },
+          {
+            "text": "TOGETHER.",
+            "start": 80.24,
+            "end": 85.0,
+            "line_break_before": true,
+            "entrance": {
+              "type": "slide",
+              "direction": "right",
+              "duration": 0.34,
+              "distance": 0.04
+            }
+          }
+        ]
+      }
+    ],
+    "notes": "Generic caption-layout fixture; no original footage or event metadata."
+  },
+  "assets": []
+}

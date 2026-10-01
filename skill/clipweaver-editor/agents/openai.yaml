@@ -1,0 +1,6 @@
+interface:
+  display_name: "ClipWeaver Editor"
+  short_description: "Turn footage and an idea into a local video edit"
+  default_prompt: "Use $clipweaver-editor to inspect my review package and create a self-contained .clipweaveredit response for my video idea, following the selected style reference when supplied."
+policy:
+  allow_implicit_invocation: true

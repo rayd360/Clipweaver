@@ -1,0 +1,42 @@
+import Foundation
+func runGlobalTests(_ base:URL) throws {
+    setenv("CLIPWEAVER_GLOBAL",base.appendingPathComponent("Global").path,1)
+    let engine=Engine(tools:try Toolchain.locate()),job=JobControl()
+    try fm.createDirectory(at:base,withIntermediateDirectories:true)
+    func check(_ ok:Bool,_ message:String)throws {if !ok {throw WeaverError(message)}}
+    let report:ProgressReport={s,_ in print(s);fflush(stdout)}
+    let source=base.appendingPathComponent("original.mp4")
+    try engine.tools.ffmpeg(["-f","lavfi","-i","testsrc2=s=1920x1080:r=60000/1001:d=2","-f","lavfi","-i","sine=frequency=440:duration=2","-c:v","libx264","-preset","ultrafast","-crf","18","-c:a","aac","-shortest",source.path],job:job)
+    let hash=try fingerprint(source,job:job)
+    let ref=try engine.importReference(source,name:"Test style",job:job,progress:report)
+    try check(abs(ref.media.fpsValue-rateValue("60000/1001"))<0.001,"Reference rate changed")
+    try check(ref.media.width==1080 && ref.media.hasAudio,"Reference detail/audio wrong")
+    try check(ref.bytes<fileSize(source),"Reference not compressed")
+    var assets=GlobalAssets();assets.references=[ref];try assets.save()
+    assets.references[0].name="Renamed style";try assets.save()
+    try check(try GlobalAssets.load().references[0].id==ref.id,"Rename changed identity")
+    let root=base.appendingPathComponent("Project");try prepareProjectFolders(root)
+    var p=try engine.add([source],project:Project(name:"Global library test"),job:job,progress:report);p.styleReferenceId=ref.id;try p.save(root)
+    let review=try engine.prepare(p,root:root,preset:.small,job:job,progress:report)
+    var manifest=try readJSON(ReviewManifest.self,review.appendingPathComponent("manifest.json"))
+    try check(manifest.styleReference?.name=="Renamed style" && manifest.sources.count==1,"Reference manifest/source separation wrong")
+    try check(try fingerprint(review.appendingPathComponent("reference/style-reference.mp4"),job:job)==fingerprint(GlobalAssets.root.appendingPathComponent(ref.video),job:job),"Packaged reference changed")
+    try check(try probe(review.appendingPathComponent("videos/CLIP_001.mp4"),tools:engine.tools).fpsValue==8,"Footage review no longer 8 fps")
+    _ = try engine.packReview(review,root:root,job:job)
+    let logo=root.appendingPathComponent("logo.png")
+    try engine.tools.ffmpeg(["-f","lavfi","-i","color=red:s=200x100","-frames:v","1",logo.path],job:job)
+    assets.logoPath=try saveProjectLogo(logo,root:GlobalAssets.root);try assets.save()
+    let second=Project(name:"Second project")
+    try check(try resolvedLogo(p,root:root)==resolvedLogo(second,root:base),"Brand is not global")
+    p.styleReferenceId=nil
+    _ = try engine.prepare(p,root:root,preset:.small,job:job,progress:report)
+    manifest=try readJSON(ReviewManifest.self,review.appendingPathComponent("manifest.json"))
+    try check(manifest.styleReference==nil && !fm.fileExists(atPath:review.appendingPathComponent("reference").path),"Deselected reference remained in review")
+    try check(manifest.projectLogo != nil,"Global logo missing from package")
+    p.includeLogoInReview=false
+    _ = try engine.prepare(p,root:root,preset:.small,job:job,progress:report)
+    manifest=try readJSON(ReviewManifest.self,review.appendingPathComponent("manifest.json"))
+    try check(manifest.projectLogo==nil,"Logo opt out failed")
+    try check(try fingerprint(source,job:job)==hash,"Original changed")
+    print("GLOBAL TESTS PASSED: 59.94 fps preserved, detailed compressed copy, audio, stable rename identity, project selection, AI manifest/ZIP, deselection, shared logo, logo opt-out, originals unchanged")
+}
