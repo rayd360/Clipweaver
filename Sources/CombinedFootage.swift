@@ -19,6 +19,7 @@ extension Engine {
         return (String(data:try JSONSerialization.data(withJSONObject:values,options:.sortedKeys),encoding:.utf8)!,frames)
     }
     func prepareCombined(_ project:Project,root:URL,job:JobControl,progress:ProgressReport)throws -> (Project,String) {
+        if project.usesCameraReviews { return (project, "DJI LRF previews stay separate. Each selection uses elapsed time in its matching OSV file.") }
         guard project.sources.count>1 else{return(project,"One original video; no combination needed.")}
         try verify(project.sources,job:job,progress:progress)
         let inputKey=project.sources.map{$0.id+":"+$0.sha256+":"+$0.media.fps+":"+String($0.media.width)+"x"+String($0.media.height)}.joined(separator:"|")

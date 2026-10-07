@@ -116,7 +116,10 @@ extension Engine {
                     guard let obj=try JSONSerialization.jsonObject(with:info) as? [String:Any], let streams=obj["streams"] as? [[String:Any]], streams.contains(where:{$0["codec_type"] as? String == "audio"}) else {throw WeaverError("\(name) is not a readable audio file.")}
                 }
             }
-            for (i,edit) in response.allEdits.enumerated() {try writeJSON(edit,stage.appendingPathComponent(i==0 ? "edit.json":"edit-\(i+1).json"))}
+            for (i,edit) in response.allEdits.enumerated() {
+                try writeJSON(edit,stage.appendingPathComponent(i==0 ? "edit.json":"edit-\(i+1).json"))
+                try project.sourceTimestampCSV(for:edit).write(to:stage.appendingPathComponent(i==0 ? "source-timestamps.csv":"source-timestamps-\(i+1).csv"),atomically:true,encoding:.utf8)
+            }
             try fm.copyItem(at:url,to:stage.appendingPathComponent("response.clipweaveredit"))
             try fm.moveItem(at:stage,to:dest)
         }

@@ -10,7 +10,7 @@ struct ReviewMusic:Codable {var name:String;var file:String;var duration:Double;
 func withSelectedMusic(_ edit:EditPlan,project:Project)->EditPlan {
     var e=edit
     if project.suppressCaptions == true {e.captions=nil;e.captionStyles=nil;e.overlays=nil}
-    if let m=project.selectedMusic {e.music=MusicPlan(filename:URL(fileURLWithPath:m.path).lastPathComponent,start:m.start,volume:m.volume,fadeIn:min(0.3,e.duration/4),fadeOut:min(0.8,e.duration/4),duck:true,loop:true)}
+    if !project.usesCameraReviews,let m=project.selectedMusic {e.music=MusicPlan(filename:URL(fileURLWithPath:m.path).lastPathComponent,start:m.start,volume:m.volume,fadeIn:min(0.3,e.duration/4),fadeOut:min(0.8,e.duration/4),duck:true,loop:true)}
     return e
 }
 extension Engine {
@@ -110,7 +110,7 @@ extension StudioView {
     var ideaLibrary:some View {
         VStack(alignment:.leading,spacing:12) {
             Text("My video idea").font(.title2)
-            Text("Describe the audience, length, mood and message once. Save ideas to reuse and adapt for future projects.").foregroundStyle(.secondary)
+            Text(model.project?.usesCameraReviews == true ? "Describe the activity you want to find, such as people interacting, reactions or useful movement. Save it to reuse on future recordings." : "Describe the audience, length, mood and message once. Save ideas to reuse and adapt for future projects.").foregroundStyle(.secondary)
             Picker("Saved video ideas",selection:Binding(get:{model.project?.savedIdeaId ?? ""},set:{id in if let idea=model.globalAssets.ideas?.first(where:{$0.id==id}) {model.useIdea(idea)}else{model.project?.savedIdeaId=nil;model.saveCreativeState()}})) {
                 Text("Custom idea").tag("")
                 ForEach((model.globalAssets.ideas ?? []).sorted{$0.name.localizedStandardCompare($1.name) == .orderedAscending}) {Text($0.name).tag($0.id)}
@@ -120,7 +120,7 @@ extension StudioView {
             }
             TextEditor(text:Binding(get:{model.project?.videoIdea ?? ""},set:{model.project?.videoIdea=String($0.prefix(12000));model.saveCreativeState()})).frame(height:110).border(Color.gray.opacity(0.4))
             HStack {Button("Save as New Idea…"){model.saveIdea(asNew:true)};if model.project?.savedIdeaId != nil {Button("Update Saved Idea"){model.saveIdea(asNew:false)}};Button("Clear"){model.project?.videoIdea="";model.project?.savedIdeaId=nil;try? model.save()}}
-            Text("Shape always follows your source footage. Music is controlled by your selection above. The AI makes three distinct versions of this idea.").font(.caption).foregroundStyle(.secondary)
+            Text(model.project?.usesCameraReviews == true ? "AI returns three selections of useful moments with original-file times and activity notes." : "Shape always follows your source footage. Music is controlled by your selection above. The AI makes three distinct versions of this idea.").font(.caption).foregroundStyle(.secondary)
         }.disabled(model.busy || model.project==nil)
     }
 }

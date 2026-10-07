@@ -69,10 +69,11 @@ if (ROOT/'Assets'/'AppIcon.icns').exists():
 
 info = {
     'CFBundleName':'ClipWeaver','CFBundleDisplayName':'ClipWeaver','CFBundleExecutable':'ClipWeaver',
-    'CFBundleIdentifier':'local.clipweaver.studio','CFBundleVersion':'7','CFBundleShortVersionString':'6.0',
+    'CFBundleIdentifier':'local.clipweaver.studio','CFBundleVersion':'8','CFBundleShortVersionString':'6.1',
     'CFBundleIconFile':'AppIcon.icns','CFBundlePackageType':'APPL','LSMinimumSystemVersion':'14.0','NSHighResolutionCapable':True,
     'NSHumanReadableCopyright':'ClipWeaver — personal local video editor',
     'CFBundleDocumentTypes':[{'CFBundleTypeName':'ClipWeaver Project','CFBundleTypeRole':'Editor','CFBundleTypeExtensions':['clipweaver']},{'CFBundleTypeName':'ClipWeaver AI Response','CFBundleTypeRole':'Editor','LSHandlerRank':'Owner','CFBundleTypeExtensions':['clipweaveredit'],'LSItemContentTypes':['local.clipweaver.response']}],
+    'UTImportedTypeDeclarations':[{'UTTypeIdentifier':'local.clipweaver.lrf','UTTypeDescription':'DJI Camera Preview','UTTypeConformsTo':['public.movie'],'UTTypeTagSpecification':{'public.filename-extension':['lrf']}},{'UTTypeIdentifier':'local.clipweaver.osv','UTTypeDescription':'DJI Camera Original','UTTypeConformsTo':['public.movie'],'UTTypeTagSpecification':{'public.filename-extension':['osv']}}],
     'UTExportedTypeDeclarations':[{'UTTypeIdentifier':'local.clipweaver.response','UTTypeDescription':'ClipWeaver AI Response','UTTypeConformsTo':['public.data'],'UTTypeTagSpecification':{'public.filename-extension':['clipweaveredit']}}]
 }
 with (CONTENTS/'Info.plist').open('wb') as f: plistlib.dump(info,f)

@@ -40,16 +40,17 @@ final class Studio: ObservableObject {
     let engine: Engine
     init(engine: Engine) {
         self.engine = engine
-        if let path = UserDefaults.standard.string(forKey: "lastProject"), let (p,r) = try? Project.open(URL(fileURLWithPath: path)) {
+        if let path = ProcessInfo.processInfo.environment["CLIPWEAVER_UI_PROJECT"] ?? studioDefaults.string(forKey: "lastProject"), let (p,r) = try? Project.open(URL(fileURLWithPath: path)) {
             project = p; root = r
             if let v = p.reviewPreset, let preset = ReviewPreset(rawValue: v) { self.preset = preset }
             if let edit = p.lastEditPath, let e = try? EditPlan.load(projectFile(edit,root:r)), (try? e.validate(p)) != nil { plan = e }
             try? library.register(r)
         }
         refreshProjects();refreshRevisions();refreshGlobal()
+        if ProcessInfo.processInfo.environment["CLIPWEAVER_UI_PROJECT"] != nil { showingProjects = false }
         inboxTimer=Timer.scheduledTimer(withTimeInterval:2,repeats:true) { [weak self] _ in self?.scanIncoming() }
     }
-    func save() throws { if let p = project, let r = root { try p.save(r); try library.register(r); refreshProjects(); refreshRevisions(); UserDefaults.standard.set(r.appendingPathComponent("Project.clipweaver").path, forKey: "lastProject") } }
+    func save() throws { if let p = project, let r = root { try p.save(r); try library.register(r); refreshProjects(); refreshRevisions(); studioDefaults.set(r.appendingPathComponent("Project.clipweaver").path, forKey: "lastProject") } }
     func newProject() {
         guard !busy else { return }
         guard let name=askName("New project",value:"My Video") else {return}
@@ -82,9 +83,9 @@ final class Studio: ObservableObject {
         guard !busy else { return }
         if project == nil { newProject() }; guard let p = project else { return }
         var urls = supplied ?? []
-        if supplied == nil { let panel = NSOpenPanel(); panel.title = "Add original videos"; panel.allowedContentTypes = [.movie, .mpeg4Movie, .quickTimeMovie]; panel.allowsMultipleSelection = true; if panel.runModal() == .OK { urls = panel.urls } }
+        if supplied == nil { let panel = NSOpenPanel(); panel.title = "Add videos or DJI LRF previews"; panel.allowedContentTypes = [.movie, .mpeg4Movie, .quickTimeMovie, UTType(importedAs:"local.clipweaver.lrf",conformingTo:.movie), UTType(importedAs:"local.clipweaver.osv",conformingTo:.movie)]; panel.allowsMultipleSelection = true; if panel.runModal() == .OK { urls = panel.urls } }
         guard !urls.isEmpty else { return }
-        run({ job, report in try self.engine.add(urls,project:p,job:job,progress:report) }, finish: { value in self.project = value; try self.save(); self.status = "\(value.sources.count) original clips ready" })
+        run({ job, report in try self.engine.add(urls,project:p,job:job,progress:report) }, finish: { value in self.project = value; try self.save(); self.status = "\(value.sources.count) source clips ready" })
     }
     func remove(_ id: String) { guard !busy else { return }; project?.nextSourceNumber = max(project?.nextSourceNumber ?? 1,(project?.sources.compactMap{Int($0.id.replacingOccurrences(of:"CLIP_",with:""))}.max() ?? 0)+1); project?.sources.removeAll { $0.id == id }; do { try save(); if let p = project, let plan { try plan.validate(p) } } catch { self.plan = nil; self.project?.lastEditPath=nil; try? self.save(); self.error = error.localizedDescription } }
     func relink(_ source: SourceClip) {
@@ -139,6 +140,10 @@ final class Studio: ObservableObject {
     func reveal(_ name: String? = nil) { guard let root else { return }; let u = name.map { root.appendingPathComponent($0) } ?? root; if fm.fileExists(atPath:u.path) { NSWorkspace.shared.activateFileViewerSelecting([u]) } else { error = "Prepare this project's AI package first." } }
     func copyPrompt() {
         guard let p = project else { return }
+        if p.usesCameraReviews {
+            NSPasteboard.general.clearContents(); NSPasteboard.general.setString(cameraActivityPrompt(p,root:root),forType:.string)
+            status = "Activity-review prompt copied — AI will return source time ranges for DJI Studio"; return
+        }
         let prompt = """
         Use the attached ClipWeaver editor instructions and EDIT-FORMAT.md to edit project “\(p.name)” (project_id: \(p.projectId)). Inspect the attached videos/storyboards and audio with the tools available. Tell me if you cannot actually see or hear them. Choose the best moments, including multiple sections of the same source when useful, and return ONE downloadable .clipweaveredit package_version 2 response with exactly three edits and their image assets. Give the three edits distinct descriptive titles, different moment selections, sequencing and caption narratives; not just renamed duplicates. Choose runtime and caption timing independently for each version based on the footage and story. Do not reuse a fixed duration or caption timetable unless I specify it. Respect any requested duration or range. If a reference is selected, all three must follow its visual style while offering genuinely different creative choices. Omit music in every edit: ClipWeaver applies my selected music locally. Never compose or generate music. Use the bundled pack_response.py helper. Use original-source seconds, and schema_version 4 for word-level captions and project-logo placements (static overlays and end cards also supported). Use reusable caption_styles; ordinary words are white, emphasized words larger bold italic charcoal. Choose per-word finished-video start/end times, layout and none/fade/slide entrances. Keep captions and logo inside the social safe area. Never put added words or captions over any face, including during entrances, movement and cross-dissolves. Inspect the entire visible interval, not just one frame. Avoid existing lettering unless that is the best readable placement, but faces are never an exception. If you cannot establish a face-free location and timing, omit that caption. Do not claim you checked unseen frames. Do not create per-frame images or fonts. Use only my supplied project logo, never branding from a reference. Choose one transition_style for the whole video: cut (every transition 0) or cross_dissolve (AI chooses 0.5–0.8 seconds for every transition after the first). Never mix styles. If the manifest has a COMBINED_ source, cut that source using its long-timeline seconds and combined_parts to locate original moments. Never cross a combined_parts original-video boundary within one selection; split into explicit selections at the exact boundary. Use strong editorial captions with short phrases, clear filled lettering, expressive staggered slide entrances and deliberate line breaks. Keep fps as "source". Ask only for essential missing creative details.
 
@@ -224,7 +229,7 @@ struct StudioView: View {
                 Button("Open Project…") { model.openProject() }.frame(maxWidth:.infinity,alignment:.leading)
                 Button("Editing Skill") { model.showSkill() }.frame(maxWidth:.infinity,alignment:.leading)
             }.buttonStyle(.plain).disabled(model.busy)
-            Text("LOCAL EDITOR  ·  VERSION 6.0").font(.system(size:9,weight:.medium)).tracking(1).foregroundStyle(.tertiary)
+            Text("LOCAL EDITOR  ·  VERSION 6.1").font(.system(size:9,weight:.medium)).tracking(1).foregroundStyle(.tertiary)
         }.padding(22).background(Color(red:0.055,green:0.065,blue:0.08))
     }
     func nav(_ index:Int,_ number:String,_ title:String,_ icon:String) -> some View {
@@ -257,12 +262,19 @@ struct StudioView: View {
                 label("THE ORIGINALS")
                 HStack(alignment:.top,spacing:20) {
                     Image(systemName:"square.and.arrow.down.on.square").font(.system(size:36,weight:.light)).foregroundStyle(accent).padding(.top,3)
-                    VStack(alignment:.leading,spacing:7) { Text("Drop your video clips here").font(.system(size:21,weight:.semibold)); Text("MP4 and MOV · Keep the full-quality files in their current folder. ClipWeaver remembers where they are.").font(.system(size:13)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true) }
+                    VStack(alignment:.leading,spacing:7) { Text("Drop your video clips here").font(.system(size:21,weight:.semibold)); Text("MP4, MOV and DJI LRF · Add camera previews to find moments and timestamps for your OSV footage. Keep the files in their current folder.").font(.system(size:13)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true) }
                     Spacer()
                     Button("Add Footage…") {model.addFiles()}.buttonStyle(.borderedProminent).controlSize(.large).disabled(model.busy)
                 }
             }
-            if model.project != nil {
+            if model.project?.usesCameraReviews == true {
+                card {
+                    label("DJI ACTIVITY REVIEW")
+                    Text("Find the moments to edit in DJI Studio").font(.title2)
+                    Text("Small LRF previews show both camera views. Tell AI what activity to look for; its selected times will be listed with the matching OSV filenames.").foregroundStyle(.secondary)
+                    ideaLibrary
+                }
+            } else if model.project != nil {
                 card {
                     label("PROJECT BRAND")
                     projectBrandPicker
@@ -281,7 +293,7 @@ struct StudioView: View {
                 card {
                     label("SMALL COPIES FOR AI")
                     HStack(alignment:.top) {
-                        VStack(alignment:.leading,spacing:8) { Text("One review video when footage matches").font(.system(size:20,weight:.semibold)); Text("Matching formats are combined without re-encoding into a full-quality master, then reduced to one 8 fps AI review. Different formats stay separate. The master uses additional disk space; original files stay unchanged.").font(.system(size:13)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true) }
+                        VStack(alignment:.leading,spacing:8) { Text(p.usesCameraReviews ? "Small review files with original-file times" : "One review video when footage matches").font(.system(size:20,weight:.semibold)); Text(p.usesCameraReviews ? "Each LRF becomes a smaller 8 fps review. Files stay separate so the times match each OSV recording in DJI Studio. Keep the camera filenames when adding LRF files." : "Matching formats are combined without re-encoding into a full-quality master, then reduced to one 8 fps AI review. Different formats stay separate. The master uses additional disk space; original files stay unchanged.").font(.system(size:13)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true) }
                         Spacer(minLength:28)
                         Picker("Detail",selection:$model.preset) {ForEach(ReviewPreset.allCases){Text($0.rawValue).tag($0)}}.labelsHidden().frame(width:150)
                     }
@@ -297,7 +309,7 @@ struct StudioView: View {
                     ForEach(p.sources) { s in
                         HStack(spacing:14) {
                             Image(systemName:"film").font(.system(size:22)).foregroundStyle(accent.opacity(0.8)).frame(width:36)
-                            VStack(alignment:.leading,spacing:4) { Text(s.filename).font(.system(size:13,weight:.medium)).lineLimit(1); Text("\(s.id)  ·  \(clockText(s.media.duration))  ·  \(s.media.width) × \(s.media.height)  ·  \(s.media.fps) fps").font(.system(size:10,design:.monospaced)).foregroundStyle(.secondary) }
+                            VStack(alignment:.leading,spacing:4) { Text(s.filename).font(.system(size:13,weight:.medium)).lineLimit(1); if let original=s.cameraOriginalFilename { Text("DJI Studio: " + original).font(.caption).foregroundStyle(.secondary) }; Text("\(s.id)  ·  \(clockText(s.media.duration))  ·  \(s.media.width) × \(s.media.height)  ·  \(s.media.fps) fps").font(.system(size:10,design:.monospaced)).foregroundStyle(.secondary) }
                             Spacer()
                             if !fm.fileExists(atPath:s.originalPath) { Image(systemName:"exclamationmark.triangle.fill").foregroundStyle(.yellow) }
                             Menu { Button("Open Original") {NSWorkspace.shared.open(URL(fileURLWithPath:s.originalPath))}; Button("Relink Original…") {model.relink(s)}; Button("Remove from Project",role:.destructive) {model.remove(s.id)} } label: { Image(systemName:"ellipsis") }.menuStyle(.borderlessButton).frame(width:26).disabled(model.busy)
@@ -313,20 +325,23 @@ struct StudioView: View {
         VStack(alignment:.leading,spacing:22) {
             card {
                 label("YOUR AI EDITOR → YOUR MAC")
-                Text("One response. Everything included.").font(.system(size:25,weight:.semibold))
-                Text("Ask AI for one ClipWeaver response. Double-click it, drop it here, or save it in the project’s Incoming folder. Three edit choices and their graphics are filed together automatically. Your selected music is applied locally.").font(.system(size:14)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
+                Text(model.project?.usesCameraReviews == true ? "Your useful moments and source times." : "One response. Everything included.").font(.system(size:25,weight:.semibold))
+                Text(model.project?.usesCameraReviews == true ? "Open AI’s ClipWeaver response, select a choice, and use Source timestamps below to find those moments in DJI Studio. A timestamp CSV is also saved beside each imported edit." : "Ask AI for one ClipWeaver response. Double-click it, drop it here, or save it in the project’s Incoming folder. Three edit choices and their graphics are filed together automatically. Your selected music is applied locally.").font(.system(size:14)).foregroundStyle(.secondary).fixedSize(horizontal:false,vertical:true)
                 HStack { Button("Open AI Response…") {model.chooseResponse()}.buttonStyle(.borderedProminent).controlSize(.large); Menu("More") {Button("Import Older edit.json…") {model.importEdit()};Button("Use Full Clips in Order",action:model.useFullClips);Button("Add Music…",action:model.music)}; Button("Show Incoming") {model.reveal("Incoming")} }.disabled(model.busy || model.project == nil)
             }
-            captionPreference
+            if model.project?.usesCameraReviews != true { captionPreference }
             if !model.revisions.isEmpty {
                 Menu("Earlier edits (\(model.revisions.count))") {ForEach(model.revisions,id:\.path) {u in Button(model.revisionLabel(u)) {model.restoreRevision(u)}}}.disabled(model.busy)
             }
             if let e = model.plan {
                 choiceGallery
+                sourceTimestampsPanel
                 if !(e.logoPlacements ?? []).isEmpty {Toggle("Show brand logo in this edit",isOn:Binding(get:{model.editLogoEnabled},set:model.setEditLogoEnabled)).disabled(model.busy)}
                 if let notes=e.notes {Text(notes).font(.callout).foregroundStyle(.secondary)}
-                exportPage
-                revisionPanel
+                if model.project?.usesCameraReviews != true {
+                    exportPage
+                    revisionPanel
+                }
 
             }
         }

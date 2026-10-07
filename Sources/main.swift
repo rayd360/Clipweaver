@@ -1,6 +1,9 @@
 import AppKit
 import Foundation
 
+if let i=CommandLine.arguments.firstIndex(of:"--camera-review-test"),i+1<CommandLine.arguments.count {
+    do {try runCameraReviewTests(URL(fileURLWithPath:CommandLine.arguments[i+1]),realReview:i+2<CommandLine.arguments.count ? URL(fileURLWithPath:CommandLine.arguments[i+2]):nil);exit(0)} catch {fputs("FAIL: \(error.localizedDescription)\n",stderr);exit(1)}
+}
 if let i=CommandLine.arguments.firstIndex(of:"--v6-test"),i+2<CommandLine.arguments.count {
     do {try runVersionSixTests(URL(fileURLWithPath:CommandLine.arguments[i+1]),reported:URL(fileURLWithPath:CommandLine.arguments[i+2]));exit(0)} catch {fputs("FAIL: \(error.localizedDescription)\n",stderr);exit(1)}
 }

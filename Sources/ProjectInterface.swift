@@ -11,12 +11,12 @@ extension Studio {
         guard !busy,let name=askName("Rename project",value:entry.project.name) else {return}
         do {let trimmed=name.trimmingCharacters(in:.whitespacesAndNewlines);guard !trimmed.isEmpty,trimmed.count<=100 else {throw WeaverError("Use a name of 1–100 characters.")};var p=entry.project;p.name=trimmed;try p.save(entry.root);if root?.standardizedFileURL.path==entry.root.standardizedFileURL.path {project=p};refreshProjects()} catch {self.error=error.localizedDescription}
     }
-    func forgetProject(_ entry:ProjectEntry) {guard !busy else{return};do{try library.forget(entry.root);if root?.standardizedFileURL.path==entry.root.standardizedFileURL.path {project=nil;root=nil;plan=nil;UserDefaults.standard.removeObject(forKey:"lastProject")};refreshProjects()}catch{self.error=error.localizedDescription}}
+    func forgetProject(_ entry:ProjectEntry) {guard !busy else{return};do{try library.forget(entry.root);if root?.standardizedFileURL.path==entry.root.standardizedFileURL.path {project=nil;root=nil;plan=nil;studioDefaults.removeObject(forKey:"lastProject")};refreshProjects()}catch{self.error=error.localizedDescription}}
     func trashProject(_ entry:ProjectEntry) {
         guard !busy else{return}
         if entry.needsDeletionConfirmation {let a=NSAlert();a.messageText="Move “\(entry.project.name)” to Trash?";a.informativeText="This moves the project's review copies, edits, music, overlays and exports to Trash. Original videos referenced outside the project stay in place.";a.addButton(withTitle:"Cancel");a.addButton(withTitle:"Move to Trash")
         guard a.runModal() == .alertSecondButtonReturn else{return}}
-        do{try library.trash(entry);status="Project and its contents moved to Trash";if root?.standardizedFileURL.path==entry.root.standardizedFileURL.path {project=nil;root=nil;plan=nil;UserDefaults.standard.removeObject(forKey:"lastProject")};refreshProjects()}catch{self.error=error.localizedDescription}
+        do{try library.trash(entry);status="Project and its contents moved to Trash";if root?.standardizedFileURL.path==entry.root.standardizedFileURL.path {project=nil;root=nil;plan=nil;studioDefaults.removeObject(forKey:"lastProject")};refreshProjects()}catch{self.error=error.localizedDescription}
     }
     func clearCaches(_ entry:ProjectEntry) {
         guard !busy else{return};let a=NSAlert();a.messageText="Clear rebuildable files?";a.informativeText="Review copies, the upload ZIP, and previews will move to Trash. Edits, music, overlays, exports, and originals will remain.";a.addButton(withTitle:"Cancel");a.addButton(withTitle:"Clear")
@@ -57,7 +57,7 @@ extension Studio {
             let (updated,edit)=try self.engine.importResponse(found.url,project:p,root:r,job:job)
             return(updated,edit,nil)
         },finish:{updated,edit,existing in
-            if let updated,let edit {self.project=updated;self.plan=edit;self.lastOutput=nil;try self.save();self.status="AI choices imported";self.renderChoices()}
+            if let updated,let edit {self.project=updated;self.plan=edit;self.lastOutput=nil;try self.save();self.status="AI choices imported";self.prepareChoicePreviews()}
             else if let existing {if self.plan==nil {self.restoreRevision(existing)};self.status="Latest response is already in this project's edit history"}
             else if pickerIfEmpty {self.responsePicker();return}
             else {self.status="No new AI response in Incoming"}
@@ -76,7 +76,7 @@ extension Studio {
             else {throw WeaverError("The matching project isn't in your library. Open its Project.clipweaver file once, then open this response again.")}
             let (p,e)=try self.engine.importResponse(url,project:match.0,root:match.1,job:job)
             return (p,match.1,e)
-        },finish:{p,r,e in self.project=p;self.root=r;self.plan=e;self.lastOutput=nil;self.showingProjects=false;self.page=1;try self.save();self.status="AI choices saved together";self.renderChoices()})
+        },finish:{p,r,e in self.project=p;self.root=r;self.plan=e;self.lastOutput=nil;self.showingProjects=false;self.page=1;try self.save();self.status="AI choices saved together";self.prepareChoicePreviews()})
     }
     func scanIncoming() {
         guard !busy,let p=project,let root else{return}

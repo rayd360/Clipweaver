@@ -203,3 +203,8 @@ Caption style now optionally accepts boolean `contrast_backing`. It defaults tru
 ### Original-video boundaries in a combined master
 
 `combined_parts` records the exact start and end of every original in the long master. Never let a single clip selection cross an internal boundary. The app and validator reject it. Choose separate selections explicitly if both originals should appear. For three ten-second originals, 8–11 is invalid; use 8–10 and 10–11 as two selections. Apply the edit's uniform transition rule between them and account for overlap; for dissolves, lengthen selections if necessary to leave room for the required 0.5–0.8 seconds. Do not infer boundaries from visual changes; use the manifest's exact times.
+
+
+## DJI LRF activity review metadata
+
+`review_purpose: "activity_timestamps"` identifies a review for original-file moment selection. Each source can add `camera_original_filename`, the matching OSV filename. Keep using the source `id` in clips and that source's elapsed seconds; end is exclusive. Camera previews remain separate. Choose chronological observed moments with a readable activity `note`, zero-transition cuts, and no graphics or music. The Mac displays and exports per-file times for manual DJI Studio edits. These additions are manifest metadata, not new edit-plan fields.

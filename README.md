@@ -5,6 +5,11 @@ footage, prepare an AI review package, import three creative edit choices,
 preview them, and export a Social or Website video. Version 6 also supports
 selected-choice revision packages, reusable brands, music, and style references.
 
+Version 6.1 also accepts DJI `.LRF` camera previews, prepares smaller activity
+reviews, and displays/copies/saves per-original-file timestamps for manual
+`.OSV` editing in DJI Studio. Camera previews remain separate; OSV files stay
+unchanged. See [START-HERE.md](START-HERE.md) for the workflow.
+
 The app prepares files locally. Sending a review package to an AI service is a
 separate user action. Exports use the original-quality media.
 

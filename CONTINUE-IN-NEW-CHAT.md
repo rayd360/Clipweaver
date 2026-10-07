@@ -1,6 +1,6 @@
 # Continue ClipWeaver in a new chat
 
-The canonical notes are beside this file in the actual app source. No archive is needed when the new chat can read this Mac's files. The handoff setup is complete; the next app feature has not been chosen. GitHub source-backup status, branch, and checkpoint are recorded in PROJECT-HANDOFF.md; verify that status before synchronization.
+The canonical notes are beside this file in the actual app source. No archive is needed when the new chat can read this Mac's files. The handoff setup and ClipWeaver 6.1 LRF/timestamp update are complete; the next app feature has not been chosen. GitHub source-backup status, branch, and checkpoint are recorded in PROJECT-HANDOFF.md; verify that status before synchronization.
 
 Copy this message into the new chat:
 
@@ -10,6 +10,6 @@ To request a specific change, replace the last sentence with “Next task: [desc
 
 If starting in the “Program Clipweaver” mirror at `/Users/jonathandouglas/.codex/.chatgpt-projects/g-p-6abd634b83408191989cd6ece699f67a`, its two short note files point here. The app source currently sits under the older “DJ trainer” mirror; use the actual path above.
 
-If the destination cannot access this Mac, clone the verified source backup at `https://github.com/rayd360/Clipweaver` (branch `main`) and read the canonical notes in the clone. The user explicitly chose a public repository. It contains program source and generic test inputs; private video projects, original footage, dependencies, caches and builds stay local. Source checkpoint: `6d2bb2bec702d7e58a51bb40b4664808daaf2d99`; later note updates are on `main`. The old Deliverables ZIPs remain historical exports.
+If the destination cannot access this Mac, clone the verified source backup at `https://github.com/rayd360/Clipweaver` (branch `main`) and read the canonical notes in the clone. The user explicitly chose a public repository. It contains program source and generic test inputs; private video projects, original footage, dependencies, caches and builds stay local. Use the current source checkpoint in PROJECT-HANDOFF.md and `git log -1` for the latest notes revision. The old Deliverables ZIPs remain historical exports.
 
 The notes summarize verified local files and recorded tests. A later code change requires its own appropriate validation and note refresh.

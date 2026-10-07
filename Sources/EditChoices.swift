@@ -11,7 +11,7 @@ extension Studio {
             return EditChoice(id:path,plan:edit,preview:preview)
         }
     }
-    func selectChoice(_ choice:EditChoice) {restoreRevision(projectFile(choice.id,root:root!));status="Selected for export: \(choice.plan.title)"}
+    func selectChoice(_ choice:EditChoice) {restoreRevision(projectFile(choice.id,root:root!));status=project?.usesCameraReviews == true ? "Selected timestamps: \(choice.plan.title)":"Selected for export: \(choice.plan.title)"}
     func renderChoices() {
         guard let p=project,let root,!choices.isEmpty else{return}
         let choices=self.choices
@@ -59,16 +59,16 @@ struct ChoicesComparison:View {
     @StateObject private var playback=ChoicePlayback()
     var body:some View {
         VStack(alignment:.leading,spacing:12) {
-            HStack {Text("Your edit choices").font(.title2);Spacer();Button("Build previews",action:model.renderChoices).disabled(model.busy);Button(playback.allPlaying ? "Pause all":"Play all together") {if playback.allPlaying {playback.stop()}else{playback.playAll(selected:model.project?.lastEditPath)}}.disabled(playback.players.count != model.choices.count || playback.players.isEmpty)}
-            Text("Hover for a silent preview. Play all starts every version together; only the selected version has sound. Select a version before exporting.").font(.caption).foregroundStyle(.secondary)
+            HStack {Text(model.project?.usesCameraReviews == true ? "Your moment selections" : "Your edit choices").font(.title2);Spacer();Button("Build previews",action:model.renderChoices).disabled(model.busy);Button(playback.allPlaying ? "Pause all":"Play all together") {if playback.allPlaying {playback.stop()}else{playback.playAll(selected:model.project?.lastEditPath)}}.disabled(playback.players.count != model.choices.count || playback.players.isEmpty)}
+            Text(model.project?.usesCameraReviews == true ? "Select a choice to see its original-file timestamps. Build previews if you want to watch the selected moments." : "Hover for a silent preview. Play all starts every version together; only the selected version has sound. Select a version before exporting.").font(.caption).foregroundStyle(.secondary)
             HStack(alignment:.top,spacing:12) {
                 ForEach(model.choices) {choice in
                     VStack(alignment:.leading,spacing:10) {
                         if let player=playback.players[choice.id] {ChoiceVideoCanvas(player:player).frame(height:220).onHover{playback.hover(choice.id,$0)}}
-                        else {Rectangle().fill(Color.black).frame(height:220).overlay(Text("Preview not built yet").foregroundStyle(.secondary))}
+                        else if model.project?.usesCameraReviews != true {Rectangle().fill(Color.black).frame(height:220).overlay(Text("Preview not built yet").foregroundStyle(.secondary))}
                         Text(choice.plan.title).font(.headline).lineLimit(3)
                         Text("\(choice.plan.clips.count) shots · \(clockText(choice.plan.duration))").font(.caption)
-                        Button(model.project?.lastEditPath==choice.id ? "Selected for export":"Select this version") {playback.stop();model.selectChoice(choice)}.buttonStyle(.borderedProminent).disabled(model.busy || model.project?.lastEditPath==choice.id)
+                        Button(model.project?.lastEditPath==choice.id ? (model.project?.usesCameraReviews == true ? "Showing these times":"Selected for export"):"Select this version") {playback.stop();model.selectChoice(choice)}.buttonStyle(.borderedProminent).disabled(model.busy || model.project?.lastEditPath==choice.id)
                     }.frame(maxWidth:.infinity).padding(10).background(model.project?.lastEditPath==choice.id ? Color.orange.opacity(0.15):Color.white.opacity(0.04)).clipShape(RoundedRectangle(cornerRadius:10))
                 }
             }

@@ -8,6 +8,10 @@ struct WeaverError: LocalizedError {
     init(_ message: String) { self.message = message }
 }
 let fm = FileManager.default
+let studioDefaults: UserDefaults = {
+    if let suite = ProcessInfo.processInfo.environment["CLIPWEAVER_DEFAULTS_SUITE"], let defaults = UserDefaults(suiteName: suite) { return defaults }
+    return .standard
+}()
 func jsonEncoder() -> JSONEncoder { let e = JSONEncoder(); e.keyEncodingStrategy = .convertToSnakeCase; e.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]; return e }
 func jsonDecoder() -> JSONDecoder { let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d }
 func writeJSON<T: Encodable>(_ value: T, _ url: URL) throws { try jsonEncoder().encode(value).write(to: url, options: .atomic) }
@@ -159,6 +163,7 @@ struct ReviewSource: Codable {
     var storyboards: [String]
     var reviewTimeOffset = 0.0
     var sampleInterval = 2.0
+    var cameraOriginalFilename: String? = nil
 }
 struct ReviewLogo: Codable {var file:String;var width:Int;var height:Int;var sha256:String}
 struct ReviewManifest: Codable {
@@ -178,6 +183,7 @@ struct ReviewManifest: Codable {
     var captionsEnabled:Bool? = nil
     var brand:BrandProfile? = nil
     var editingPolicyVersion:Int? = nil
+    var reviewPurpose:String? = nil
 }
 
 typealias ProgressReport = (String, Double) -> Void
@@ -187,8 +193,9 @@ final class Engine {
     init(tools: Toolchain) { self.tools = tools }
     func add(_ urls: [URL], project: Project, job: JobControl, progress: ProgressReport) throws -> Project {
         var p = project
-        for (i, u) in urls.enumerated() {
-            try job.check(); if p.sources.contains(where: { $0.originalPath == u.path }) { continue }
+        for (i, supplied) in urls.enumerated() {
+            try job.check(); let u = try cameraReviewInput(supplied)
+            if p.sources.contains(where: { $0.originalPath == u.path }) { continue }
             progress("Reading \(u.lastPathComponent)", Double(i)/Double(max(urls.count,1)))
             let media = try probe(u, tools: tools, job: job)
             let hash = try fingerprint(u, job: job)
@@ -212,7 +219,7 @@ final class Engine {
         let combined=updated.combinedMasters?.last(where:{$0.parts.map(\.sourceId)==updated.sources.map(\.id) && $0.parts.count==updated.sources.count})
         if note.hasPrefix("Using full-quality") || note.hasPrefix("Combined "),let combined {p.sources=[combined.source]}
         guard !p.sources.isEmpty else { throw WeaverError("Add some footage first.") }
-        if originalProject.sources.count<=1 {try verify(p.sources, job: job, progress: { progress($0, $1*0.08) })}
+        if originalProject.usesCameraReviews || originalProject.sources.count<=1 {try verify(p.sources, job: job, progress: { progress($0, $1*0.08) })}
         let dest = root.appendingPathComponent("For AI")
         let temp = root.appendingPathComponent(".preparing-\(UUID().uuidString)")
         try fm.createDirectory(at: temp, withIntermediateDirectories: true)
@@ -256,17 +263,17 @@ final class Engine {
                 sheets.append(rel)
             }
             try fm.removeItem(at: frames)
-            manifestSources.append(ReviewSource(id: s.id, filename: s.filename, duration: s.media.duration, originalFps: s.media.fps, originalWidth: s.media.width, originalHeight: s.media.height, hasAudio: s.media.hasAudio, sha256: s.sha256, reviewVideo: videoRel, reviewAudio: audioRel, storyboards: sheets))
+            manifestSources.append(ReviewSource(id: s.id, filename: s.filename, duration: s.media.duration, originalFps: s.media.fps, originalWidth: s.media.width, originalHeight: s.media.height, hasAudio: s.media.hasAudio, sha256: s.sha256, reviewVideo: videoRel, reviewAudio: audioRel, storyboards: sheets, cameraOriginalFilename: s.cameraOriginalFilename))
         }
         var reviewLogo:ReviewLogo?=nil
-        if p.includeLogoInReview != false,let original=try resolvedLogo(p,root:root) {
+        if !originalProject.usesCameraReviews,p.includeLogoInReview != false,let original=try resolvedLogo(p,root:root) {
             let im=try checkedImage(original)
             try fm.createDirectory(at:temp.appendingPathComponent("branding"),withIntermediateDirectories:true)
             try fm.copyItem(at:original,to:temp.appendingPathComponent("branding/project-logo.png"))
             reviewLogo=ReviewLogo(file:"branding/project-logo.png",width:Int(im.size.width),height:Int(im.size.height),sha256:try fingerprint(original,job:job))
         }
         var reference:ReviewReference?=nil
-        if let id=p.styleReferenceId {
+        if !originalProject.usesCameraReviews, let id=p.styleReferenceId {
             guard let ref=try GlobalAssets.load().references.first(where:{$0.id==id}) else {throw WeaverError("Selected style reference is missing. Select another reference or clear the selection.")}
             let folder=temp.appendingPathComponent("reference");try fm.createDirectory(at:folder,withIntermediateDirectories:true)
             try fm.copyItem(at:GlobalAssets.root.appendingPathComponent(ref.video),to:folder.appendingPathComponent("style-reference.mp4"))
@@ -274,14 +281,26 @@ final class Engine {
             reference=ReviewReference(id:ref.id,name:ref.name,file:"reference/style-reference.mp4",duration:ref.media.duration,fps:ref.media.fps,width:ref.media.width,height:ref.media.height)
             try Data("STYLE REFERENCE ONLY: \(ref.name)\nMock its editing style using the project footage. Preserve your own brand and wording. This video is not an editable source and must never appear in clips. Inspect its original-cadence motion, pacing and caption entrances.\n".utf8).write(to:folder.appendingPathComponent("READ-ME.txt"))
         }
-        let reviewMusic=try prepareReviewMusic(originalProject,root:root,folder:temp,job:job)
-        try writeJSON(ReviewManifest(projectId: p.projectId, projectName: p.name, timeUnits:p.sources.first?.id.hasPrefix("COMBINED_")==true ? "seconds from the first displayed frame of the full-quality combined master; end is exclusive":"seconds from the first displayed frame of the original; end is exclusive", sources: manifestSources,projectLogo:reviewLogo,styleReference:reference,combinedParts:p.sources.first?.id.hasPrefix("COMBINED_")==true ? combined?.parts:nil,preparationNote:note,selectedMusic:reviewMusic,videoIdea:originalProject.videoIdea,requestedVersions:3,captionsEnabled:originalProject.suppressCaptions != true,brand:try GlobalAssets.load().brand(for:originalProject).reviewValue,editingPolicyVersion:6), temp.appendingPathComponent("manifest.json"))
+        let reviewMusic = originalProject.usesCameraReviews ? nil : try prepareReviewMusic(originalProject,root:root,folder:temp,job:job)
+        try writeJSON(ReviewManifest(projectId: p.projectId, projectName: p.name, timeUnits:p.sources.first?.id.hasPrefix("COMBINED_")==true ? "seconds from the first displayed frame of the full-quality combined master; end is exclusive":"seconds from the first displayed frame of the original; end is exclusive", sources: manifestSources,projectLogo:reviewLogo,styleReference:reference,combinedParts:p.sources.first?.id.hasPrefix("COMBINED_")==true ? combined?.parts:nil,preparationNote:note,selectedMusic:reviewMusic,videoIdea:originalProject.videoIdea,requestedVersions:3,captionsEnabled:!originalProject.usesCameraReviews && originalProject.suppressCaptions != true,brand:originalProject.usesCameraReviews ? nil : try GlobalAssets.load().brand(for:originalProject).reviewValue,editingPolicyVersion:6,reviewPurpose:originalProject.usesCameraReviews ? "activity_timestamps" : nil), temp.appendingPathComponent("manifest.json"))
         if let skill = resourceSkillURL() {
             try fm.copyItem(at: skill, to: temp.appendingPathComponent("clipweaver-editor"))
             try fm.copyItem(at: skill.appendingPathComponent("SKILL.md"), to: temp.appendingPathComponent("EDITOR-INSTRUCTIONS.md"))
             try fm.copyItem(at: skill.appendingPathComponent("references/edit-format.md"), to: temp.appendingPathComponent("EDIT-FORMAT.md"))
         }
-        let guide = """
+        let guide = originalProject.usesCameraReviews ? """
+        CLIPWEAVER — DJI ACTIVITY REVIEW
+        Project: \(p.name)
+        Project ID: \(p.projectId)
+
+        Upload this package to AI with ClipWeaver’s copied prompt. Inspect the 8 fps videos and both fisheye views to select meaningful activity. Storyboards are a sparse visual index and can miss brief events.
+
+        Each source has its own elapsed timeline starting at zero. The manifest’s camera_original_filename identifies the matching OSV file. Return exactly three timestamp selections in one .clipweaveredit response with a short observed-activity note for every clip. Use source IDs and source-local seconds, cuts, source shape/fps, and no graphics or music. Read EDITOR-INSTRUCTIONS.md and EDIT-FORMAT.md.
+
+        Open the response in ClipWeaver. In Review & Export, select a choice and read Source timestamps. Copy the list or save a CSV, then use the file names and times to edit the originals in DJI Studio. Optional previews use LRF footage. ClipWeaver does not modify or cut OSV files.
+
+        Original filenames must be preserved for matching. All review media stays at normal speed. AI must disclose anything it could not inspect or hear.
+        """ : """
         CLIPWEAVER — REVIEW PACKAGE
         Project: \(p.name)
         Project ID: \(p.projectId)
