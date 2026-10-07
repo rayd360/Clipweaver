@@ -12,18 +12,13 @@ The handoff setup was approved on 2026-09-30 (“Yes, set up the handoff”) and
 
 On 2026-10-07 the user requested LRF support and visible timestamps, stating they will handle OSV clips themselves. This short, clear request authorized implementation under the current build-my-program skill. Scope completed: LRF import/review, activity-focused AI instructions, selected-choice timestamps with OSV names, copy/save CSV, installation and validation. No OSV extraction is requested. The prior attempted generic lossless OSV trim failed on proprietary data tracks; do not claim OSV/DJI Studio trimming compatibility.
 
-## Locations and project identity
+## Source and installation
 
-- Canonical source/notes: `/Users/jonathandouglas/.codex/.chatgpt-projects/g-p-6a7f34c62ce48191a75f041f246e5e84/ClipWeaver`.
-- Installed app: `/Users/jonathandouglas/Applications/ClipWeaver.app`; build: `build/ClipWeaver.app`. Both **6.1**, bundle build **8**.
-- Launching chat: `/Users/jonathandouglas/.codex/.chatgpt-projects/g-p-6abd634b83408191989cd6ece699f67a`; its two notes are pointers, not duplicate status.
-- User projects/registry: `~/Movies/ClipWeaver Projects`, `.projects.json`.
-- Shared brands/music/ideas/references: `~/Library/Application Support/ClipWeaver/Global/Library.json` and associated assets.
-- Bundled editor instructions: `skill/clipweaver-editor`; installed copy: `~/.codex/skills/clipweaver-editor`.
+Continue in the existing repository folder. On the development Mac, the local-only `.local/PROJECT-LOCATIONS.md` records exact source/app paths and recovery locations; it is excluded from GitHub. Launching chat pointers also identify the canonical source. Do not relocate the app or modify enclosing synced reference files.
 
-Source remains in the older “DJ trainer” mirror. Do not relocate it to organize a chat. Both enclosing mirrors protect synced lowercase `sources/` and their AGENTS.md; leave them untouched.
+Installed and built release: **6.1**, bundle build **8**. The installer places ClipWeaver in the user’s Applications folder; build output is `build/ClipWeaver.app`. User projects and shared libraries use the standard locations implemented in Projects.swift and GlobalLibrary.swift. Editor instructions live in `skill/clipweaver-editor` and are bundled/installed by the scripts.
 
-Git repository: local `main` tracks `origin/main`, `https://github.com/rayd360/Clipweaver`, public by user choice. Pre-update checkpoint `37946373ad6f8a4ecefc69b46d233b0b3bbb2d39` was verified on local/remote main. Recoverable source bundle: `build/source-checkpoints/pre-lrf-20261007.bundle`. LRF update is installed and validated locally; GitHub synchronization is in progress. Recheck `git status` and remote state before synchronizing; use `git log -1` for the latest notes revision.
+Repository: local `main` tracks `origin/main`, `https://github.com/rayd360/Clipweaver`, public by user choice. Pre-update checkpoint: `37946373ad6f8a4ecefc69b46d233b0b3bbb2d39`. LRF source milestone `367ef59eb186749bb5734a2ed3b577a21885bc1f` reached GitHub main; its complete tree matched the staged local source. Final public notes omit local environment details. No uncommitted program work remains at completion; recheck `git status` and remote state before synchronization, and use `git log -1` for the latest notes revision.
 
 ## Essential behavior and invariants
 
@@ -46,24 +41,24 @@ From the canonical source, with Xcode tools, Python and Homebrew FFmpeg installe
 ```sh
 python3 scripts/build.py
 python3 scripts/install-local.py
-open "/Users/jonathandouglas/Applications/ClipWeaver.app"
+open build/ClipWeaver.app
 ```
 
-Close the app before installation. Installer preserves previous app/editor skill under `build/install-backups`; it does not back up user data. The 6.1 installation backup is `build/install-backups/20261007-131856`. Focused real-record backup and detailed logs are local under `/private/tmp/clipweaver-lrf-check.m9iqph`.
+Close the app before installation. Installer preserves previous app/editor skill under `build/install-backups`; it does not back up user data. Exact local recovery locations are recorded in `.local/PROJECT-LOCATIONS.md`, excluded from source backups.
 
 Relevant fresh-folder checks:
 
 ```sh
-clipweaver_check_root=$(mktemp -d /private/tmp/clipweaver-check.XXXXXX)
-build/ClipWeaver.app/Contents/MacOS/ClipWeaver --camera-review-test "$clipweaver_check_root/CameraCase" /path/to/preview.LRF
+clipweaver_check_root=$(python3 -c 'import tempfile; print(tempfile.mkdtemp(prefix="clipweaver-check-"))')
+build/ClipWeaver.app/Contents/MacOS/ClipWeaver --camera-review-test "$clipweaver_check_root/CameraCase"
 CLIPWEAVER_LIBRARY="$clipweaver_check_root/V6Library" build/ClipWeaver.app/Contents/MacOS/ClipWeaver --v6-test "$clipweaver_check_root/V6" tests/fixtures/reported-caption.clipweaveredit
 CLIPWEAVER_GLOBAL="$clipweaver_check_root/SelfGlobal" CLIPWEAVER_LIBRARY="$clipweaver_check_root/SelfLibrary" build/ClipWeaver.app/Contents/MacOS/ClipWeaver --self-test --test-dir "$clipweaver_check_root/Self"
 ```
 
 ## Validation, remaining work and unanswered questions
 
-On 2026-10-07: build/signature passed; installed and built executable hashes match. Camera tests, real DJI LRF, validator/packer, self-test and V6 (including V5) passed. Installed UI verified LRF picker, camera instructions, selected-choice time changes, copy/save CSV and panel layout. Nine project/registry/global records are byte-identical; last-project preference preserved. Native picker changed only its last-folder preference. Reopened installed app with regular user projects. See `tests/LRF-TIMESTAMP-TESTS.md` for exact evidence/limits.
+On 2026-10-07: build/signature passed; installed and built executable hashes match. Camera tests, real DJI LRF, validator/packer, self-test and V6 (including V5) passed. Installed UI verified LRF picker, camera instructions, selected-choice time changes, copy/save CSV and panel layout. Existing project/registry/global records and the last-project preference were preserved. The native picker updated only its last-folder preference. The installed app was reopened with regular user projects. See `tests/LRF-TIMESTAMP-TESTS.md` for exact evidence/limits.
 
 Measured real LRF: 17,557,399 bytes became a 547,726-byte review video, excluding package overhead; source duration retained within one 8 fps sample. Timestamp selections were synthetic: these tests do not establish AI event-selection accuracy.
 
-Remaining task: finish/verify GitHub synchronization. No unanswered product decision; next feature has not been requested.
+The requested update and verified GitHub backup are complete. No unanswered product decision or required work remains; the next feature has not been requested.

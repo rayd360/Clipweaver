@@ -14,13 +14,13 @@ Passed:
 - Existing self-test and V6 regression suite (including V5) passed: response validity/history, original preservation, captions, brands, selected-choice revisions, HDR, source time offsets and rendering.
 - Installed app UI: LRF file selectable through Add Footage; camera help/version visible; switching choices updates Source timestamps; Copy reports success; Save produces a CSV whose filename and 0.250000–1.750000 range match the selected choice. Panel layout visually checked.
 - Installed signature valid; installed and built executable SHA-256 match: `ee3789206987c56735a6663c6a823779a7f36496ac119ea2492bbb855248d87d`.
-- Nine existing project/registry/global records remain byte-identical; last-project preference retained. The native file picker changed only its last-folder preference. Prior app/editor instructions are backed up locally.
+- Existing project/registry/global records remain byte-identical; last-project preference retained. The native file picker changed only its last-folder preference. Prior app/editor instructions are backed up locally.
 
 Checks use temporary projects and separate global/library paths. Test footage, actual camera filenames, generated media, logs and user records remain local and excluded from Git.
 
 ```sh
-clipweaver_check_root=$(mktemp -d /private/tmp/clipweaver-lrf-check.XXXXXX)
-build/ClipWeaver.app/Contents/MacOS/ClipWeaver --camera-review-test "$clipweaver_check_root/CameraCase" /path/to/camera-preview.LRF
+clipweaver_check_root=$(python3 -c 'import tempfile; print(tempfile.mkdtemp(prefix="clipweaver-lrf-check-"))')
+build/ClipWeaver.app/Contents/MacOS/ClipWeaver --camera-review-test "$clipweaver_check_root/CameraCase"
 CLIPWEAVER_LIBRARY="$clipweaver_check_root/V6Library" build/ClipWeaver.app/Contents/MacOS/ClipWeaver --v6-test "$clipweaver_check_root/V6" tests/fixtures/reported-caption.clipweaveredit
 CLIPWEAVER_GLOBAL="$clipweaver_check_root/SelfGlobal" CLIPWEAVER_LIBRARY="$clipweaver_check_root/SelfLibrary" build/ClipWeaver.app/Contents/MacOS/ClipWeaver --self-test --test-dir "$clipweaver_check_root/Self"
 ```
