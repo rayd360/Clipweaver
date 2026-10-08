@@ -1,6 +1,7 @@
 import Foundation
 
-func runCameraReviewTests(_ base: URL, realReview: URL?) throws {
+func runCameraReviewTests(_ suppliedBase: URL, realReview: URL?) throws {
+    let base = suppliedBase.resolvingSymlinksInPath()
     guard !fm.fileExists(atPath: base.path) else { throw WeaverError("Use a fresh test folder.") }
     try fm.createDirectory(at: base, withIntermediateDirectories: true)
     setenv("CLIPWEAVER_GLOBAL", base.appendingPathComponent("Global").path, 1)
@@ -32,6 +33,35 @@ func runCameraReviewTests(_ base: URL, realReview: URL?) throws {
     let manifest = try readJSON(ReviewManifest.self, review.appendingPathComponent("manifest.json"))
     try check(manifest.sources.count == 2 && manifest.combinedParts == nil && !fm.fileExists(atPath: root.appendingPathComponent("Masters").path), "Camera files were combined; original-file times would be lost")
     try check(manifest.reviewPurpose == "activity_timestamps" && manifest.captionsEnabled == false, "Activity-review instructions are missing")
+    let assets = GlobalAssets()
+    try check(p.reviewManifestIsCurrent(manifest, assets: assets, root: root), "Completed LRF review was rejected by the upload readiness check")
+    var cameraSettings = p
+    cameraSettings.styleReferenceId = "ignored-camera-reference"
+    cameraSettings.selectedMusic = ProjectMusic(id: "ignored-camera-music", name: "Ignored", path: "unused.m4a", duration: 30, start: 4)
+    cameraSettings.logoPath = "unused.png"; cameraSettings.suppressCaptions = false
+    try check(cameraSettings.reviewManifestIsCurrent(manifest, assets: assets, root: root), "Camera review incorrectly requires ordinary music, reference, logo or caption settings")
+    var stale = manifest; stale.reviewPurpose = nil
+    try check(!p.reviewManifestIsCurrent(stale, assets: assets, root: root), "Missing camera purpose was accepted")
+    stale = manifest; stale.projectId = "OTHER_PROJECT"
+    try check(!p.reviewManifestIsCurrent(stale, assets: assets, root: root), "A different project's package was accepted")
+    stale = manifest; stale.sources.removeLast()
+    try check(!p.reviewManifestIsCurrent(stale, assets: assets, root: root), "Missing camera sources were accepted")
+    stale = manifest; stale.sources[0].sha256 = "changed"
+    try check(!p.reviewManifestIsCurrent(stale, assets: assets, root: root), "Changed camera sources were accepted")
+    stale = manifest; stale.videoIdea = "Changed activity request"
+    try check(!p.reviewManifestIsCurrent(stale, assets: assets, root: root), "A changed activity request was accepted")
+    var ordinary = p; ordinary.sources[0].filename = "ordinary-a.mp4"; ordinary.sources[1].filename = "ordinary-b.mp4"
+    var ordinaryManifest = manifest; ordinaryManifest.reviewPurpose = nil; ordinaryManifest.captionsEnabled = true; ordinaryManifest.brand = assets.brand(for: ordinary).reviewValue
+    try check(ordinary.reviewManifestIsCurrent(ordinaryManifest, assets: assets, root: root), "Ordinary video review readiness regressed")
+    ordinary.suppressCaptions = true
+    try check(!ordinary.reviewManifestIsCurrent(ordinaryManifest, assets: assets, root: root), "Changed ordinary caption setting was accepted")
+    let upload = try engine.packReview(review, root: root, job: job)
+    try check(fileSize(upload) > 0, "Camera upload ZIP was not created")
+    _ = try engine.packReview(review, root: root, job: job)
+    try check(fileSize(upload) > 0, "Re-preparing removed the camera upload ZIP")
+    let packedManifest = try Toolchain(root: URL(fileURLWithPath: "/usr/bin")).run("unzip", ["-p", upload.path, "For AI/manifest.json"], job: job)
+    try check(try jsonDecoder().decode(ReviewManifest.self, from: packedManifest).projectId == p.projectId, "Camera ZIP contains the wrong project")
+    print("PASS: camera and ordinary upload readiness, ignored camera creative settings, stale/changed-package rejection, initial and repeated ZIP preparation")
     for (index, source) in manifest.sources.enumerated() {
         let info = try probe(review.appendingPathComponent(source.reviewVideo), tools: tools)
         try check(info.fpsValue == 8 && abs(info.duration - p.sources[index].media.duration) < 0.14, "LRF review timing drifted")

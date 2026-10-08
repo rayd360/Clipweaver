@@ -1,6 +1,6 @@
 # Continue ClipWeaver in a new chat
 
-The canonical notes are beside this file in the actual app source. No archive is needed when the new chat can read this Mac's files. The handoff setup and ClipWeaver 6.1 LRF/timestamp update are complete; the next app feature has not been chosen. GitHub source-backup status, branch, and checkpoint are recorded in PROJECT-HANDOFF.md; verify that status before synchronization.
+The canonical notes are beside this file in the actual app source. No archive is needed when the new chat can read this Mac's files. The handoff setup and ClipWeaver 6.1.1 LRF/timestamp update and preparation repair are complete; the next app feature has not been chosen. GitHub source-backup status, branch, and checkpoint are recorded in PROJECT-HANDOFF.md; verify that status before synchronization.
 
 Copy this message into the new chat:
 

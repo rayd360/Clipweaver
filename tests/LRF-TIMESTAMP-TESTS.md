@@ -26,3 +26,11 @@ CLIPWEAVER_GLOBAL="$clipweaver_check_root/SelfGlobal" CLIPWEAVER_LIBRARY="$clipw
 ```
 
 Limit: tests verify media handling and timestamp delivery, not AI event-selection accuracy. AI still inspects the supplied package externally. OSV names are inferred from unchanged camera basenames. ClipWeaver does not cut/stitch OSV; the user checks and edits those ranges in DJI Studio.
+
+## Preparation repair: 6.1.1, build 9
+
+Fresh execution: 2026-10-07. Completed LRF packages were incorrectly rejected by the ordinary-video readiness check, which expected enabled captions and branding. Readiness now checks activity-review metadata and exact camera source identities; camera projects omit ordinary creative settings intentionally. Ordinary-video caption/brand/music/reference/logo checks remain intact. Paired-preview lookup also retains the supplied folder spelling to deduplicate in aliased Mac folders.
+
+Passed: current camera/ordinary reviews, ignored camera creative settings, changed request/source/project rejection, initial and repeated ZIP preparation, all existing camera timestamp checks, and V6 regressions. Installed UI Prepare for AI completed and automatically copied the ZIP without an alert. A previously prepared real package passed complete ZIP integrity, was recognized and copied in the installed repair without rebuilding. Project/manifest/registry/shared-library data and the completed ZIP were unchanged.
+
+Installed/build executable SHA-256 matched: `77472d1e743c75eb0029d71ca316ef4151f42695a918df44b84046cb419ac04f`. Installed signature verified. The app/editor instructions and affected saved records were preserved locally before installation. Private project names, paths, footage and test logs are excluded from source history.

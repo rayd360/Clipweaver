@@ -69,7 +69,7 @@ if (ROOT/'Assets'/'AppIcon.icns').exists():
 
 info = {
     'CFBundleName':'ClipWeaver','CFBundleDisplayName':'ClipWeaver','CFBundleExecutable':'ClipWeaver',
-    'CFBundleIdentifier':'local.clipweaver.studio','CFBundleVersion':'8','CFBundleShortVersionString':'6.1',
+    'CFBundleIdentifier':'local.clipweaver.studio','CFBundleVersion':'9','CFBundleShortVersionString':'6.1.1',
     'CFBundleIconFile':'AppIcon.icns','CFBundlePackageType':'APPL','LSMinimumSystemVersion':'14.0','NSHighResolutionCapable':True,
     'NSHumanReadableCopyright':'ClipWeaver — personal local video editor',
     'CFBundleDocumentTypes':[{'CFBundleTypeName':'ClipWeaver Project','CFBundleTypeRole':'Editor','CFBundleTypeExtensions':['clipweaver']},{'CFBundleTypeName':'ClipWeaver AI Response','CFBundleTypeRole':'Editor','LSHandlerRank':'Owner','CFBundleTypeExtensions':['clipweaveredit'],'LSItemContentTypes':['local.clipweaver.response']}],

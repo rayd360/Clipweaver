@@ -229,7 +229,7 @@ struct StudioView: View {
                 Button("Open Project…") { model.openProject() }.frame(maxWidth:.infinity,alignment:.leading)
                 Button("Editing Skill") { model.showSkill() }.frame(maxWidth:.infinity,alignment:.leading)
             }.buttonStyle(.plain).disabled(model.busy)
-            Text("LOCAL EDITOR  ·  VERSION 6.1").font(.system(size:9,weight:.medium)).tracking(1).foregroundStyle(.tertiary)
+            Text("LOCAL EDITOR  ·  VERSION 6.1.1").font(.system(size:9,weight:.medium)).tracking(1).foregroundStyle(.tertiary)
         }.padding(22).background(Color(red:0.055,green:0.065,blue:0.08))
     }
     func nav(_ index:Int,_ number:String,_ title:String,_ icon:String) -> some View {

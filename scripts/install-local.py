@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parents[1]
 source=root/'build/ClipWeaver.app'
 destination=Path.home()/'Applications/ClipWeaver.app'
 subprocess.run(['codesign','--verify','--deep','--strict',str(source)],check=True)
-assert plistlib.loads((source/'Contents/Info.plist').read_bytes())['CFBundleShortVersionString']=='6.1'
+assert plistlib.loads((source/'Contents/Info.plist').read_bytes())['CFBundleShortVersionString']=='6.1.1'
 backup=root/'build/install-backups'/datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 backup.mkdir(parents=True)
 if destination.exists():

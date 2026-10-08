@@ -12,11 +12,13 @@ The handoff setup was approved on 2026-09-30 (“Yes, set up the handoff”) and
 
 On 2026-10-07 the user requested LRF support and visible timestamps, stating they will handle OSV clips themselves. This short, clear request authorized implementation under the current build-my-program skill. Scope completed: LRF import/review, activity-focused AI instructions, selected-choice timestamps with OSV names, copy/save CSV, installation and validation. No OSV extraction is requested. The prior attempted generic lossless OSV trim failed on proprietary data tracks; do not claim OSV/DJI Studio trimming compatibility.
 
+The user subsequently reported a false “Prepare this project’s AI package first” alert after LRF preparation. Focused repair: camera upload readiness follows camera metadata and source identities instead of ordinary branding/caption/music settings. The completed archive can be reused. The short, clear report authorized this fix; implementation, regression checks and installed-app verification are complete.
+
 ## Source and installation
 
 Continue in the existing repository folder. On the development Mac, the local-only `.local/PROJECT-LOCATIONS.md` records exact source/app paths and recovery locations; it is excluded from GitHub. Launching chat pointers also identify the canonical source. Do not relocate the app or modify enclosing synced reference files.
 
-Installed and built release: **6.1**, bundle build **8**. The installer places ClipWeaver in the user’s Applications folder; build output is `build/ClipWeaver.app`. User projects and shared libraries use the standard locations implemented in Projects.swift and GlobalLibrary.swift. Editor instructions live in `skill/clipweaver-editor` and are bundled/installed by the scripts.
+Installed and built release: **6.1.1**, bundle build **9**. The installer places ClipWeaver in the user’s Applications folder; build output is `build/ClipWeaver.app`. User projects and shared libraries use the standard locations implemented in Projects.swift and GlobalLibrary.swift. Editor instructions live in `skill/clipweaver-editor` and are bundled/installed by the scripts.
 
 Repository: local `main` tracks `origin/main`, `https://github.com/rayd360/Clipweaver`, public by user choice. Pre-update checkpoint: `37946373ad6f8a4ecefc69b46d233b0b3bbb2d39`. LRF source milestone `367ef59eb186749bb5734a2ed3b577a21885bc1f` reached GitHub main; its complete tree matched the staged local source. Final public notes omit local environment details. No uncommitted program work remains at completion; recheck `git status` and remote state before synchronization, and use `git log -1` for the latest notes revision.
 
@@ -61,4 +63,6 @@ On 2026-10-07: build/signature passed; installed and built executable hashes mat
 
 Measured real LRF: 17,557,399 bytes became a 547,726-byte review video, excluding package overhead; source duration retained within one 8 fps sample. Timestamp selections were synthetic: these tests do not establish AI event-selection accuracy.
 
-The requested update and verified GitHub backup are complete. No unanswered product decision or required work remains; the next feature has not been requested.
+On 2026-10-07 the 6.1.1 repair passed camera readiness checks, ignored creative-setting checks, stale-package rejection, initial/repeated ZIP preparation, and V6 regressions. Installed UI preparation completed and automatically copied its ZIP; a previously prepared real package was recognized and copied without rebuilding. Existing project/library records and completed ZIP remained unchanged. Installed/build binaries match and signature verifies. See tests/LRF-TIMESTAMP-TESTS.md.
+
+Current task: finish verifying the GitHub repair checkpoint. No unanswered product decision.

@@ -1,4 +1,4 @@
-# ClipWeaver 6.1
+# ClipWeaver 6.1.1
 
 ## DJI LRF files: find moments for DJI Studio
 
@@ -9,6 +9,8 @@ Create a project and drop the camera’s **.LRF** files into **Prepare for AI**,
 3. Open the **.clipweaveredit** response in ClipWeaver. In **Review & Export**, select one of the three moment selections.
 4. Read **Source timestamps** below the choices. It shows the matching **OSV filename**, **Start**, **End**, length and activity note. **Copy timestamps** copies a readable list; **Save timestamps…** saves a CSV with clock times and exact seconds. Each choice also has an automatic CSV beside its imported edit in **Edits**.
 5. Find those files and time ranges in DJI Studio and make your original-quality OSV edits there. End times mark the first moment excluded. **Build previews** is optional and uses the LRF footage.
+
+Version 6.1.1 fixes a readiness check that rejected completed LRF packages. An existing valid LRF package now shows **Copy ChatGPT .Zip file** and **Show Upload ZIP** without preparing it again.
 
 AI inspects the supplied review package; ClipWeaver does not detect activity by itself. The camera views can appear as two fisheye circles. The OSV files remain unchanged. Filename matching assumes the camera’s original LRF/OSV names and corresponding recording timelines; review the selected ranges in DJI Studio.
 

@@ -14,6 +14,34 @@ func saveProjectLogo(_ source:URL,root:URL) throws -> String {
     let dest=folder.appendingPathComponent("logo-\(UUID().uuidString).png");try data.write(to:dest,options:.atomic)
     return relativeProjectPath(dest,root:root)
 }
+extension Project {
+    func reviewManifestIsCurrent(_ manifest: ReviewManifest, assets: GlobalAssets, root: URL) -> Bool {
+        guard manifest.projectId == projectId, manifest.editingPolicyVersion == 6,
+              manifest.requestedVersions == 3, manifest.videoIdea == videoIdea else { return false }
+        if usesCameraReviews {
+            // Camera reviews deliberately omit ordinary video branding, captions and music.
+            guard manifest.reviewPurpose == "activity_timestamps", manifest.captionsEnabled == false,
+                  manifest.brand == nil, manifest.projectLogo == nil, manifest.styleReference == nil,
+                  manifest.selectedMusic == nil, manifest.combinedParts == nil,
+                  manifest.sources.count == sources.count else { return false }
+            return zip(manifest.sources, sources).allSatisfy { review, source in
+                review.id == source.id && review.sha256 == source.sha256 &&
+                review.filename == source.filename && review.cameraOriginalFilename == source.cameraOriginalFilename &&
+                review.duration == source.media.duration
+            }
+        }
+        guard manifest.reviewPurpose == nil, manifest.styleReference?.id == styleReferenceId,
+              manifest.captionsEnabled == (suppressCaptions != true),
+              manifest.brand?.id == assets.brand(for: self).id, manifest.brand?.name == assets.brand(for: self).name,
+              manifest.selectedMusic?.name == selectedMusic?.name, manifest.selectedMusic?.start == selectedMusic?.start else { return false }
+        if let id = styleReferenceId {
+            guard let ref = assets.references.first(where: { $0.id == id }), ref.name == manifest.styleReference?.name else { return false }
+        }
+        let logo = (includeLogoInReview != false) ? (try? resolvedLogo(self, root: root)) : nil
+        if let logo { return (try? fingerprint(logo, job: JobControl())) == manifest.projectLogo?.sha256 }
+        return manifest.projectLogo == nil
+    }
+}
 extension Studio {
     var projectLogoURL:URL? {guard let root,let path=project?.logoPath else{return nil};return projectFile(path,root:root)}
     var editLogoEnabled:Bool {guard let path=project?.lastEditPath else{return true};return !(project?.logoHiddenEdits ?? []).contains(path)}
@@ -28,12 +56,9 @@ extension Studio {
     var readyUploadZIP:URL? {
         guard !busy,let root,let project else{return nil}
         let u=root.appendingPathComponent("Upload to AI.zip")
-        guard fileSize(u)>0,let manifest=try? readJSON(ReviewManifest.self,root.appendingPathComponent("For AI/manifest.json")),manifest.styleReference?.id==project.styleReferenceId else{return nil}
-        guard manifest.editingPolicyVersion==6,manifest.captionsEnabled == (project.suppressCaptions != true),manifest.brand?.id==globalAssets.brand(for:project).id,manifest.brand?.name==globalAssets.brand(for:project).name,manifest.requestedVersions==3,manifest.videoIdea==project.videoIdea,manifest.selectedMusic?.name==project.selectedMusic?.name,manifest.selectedMusic?.start==project.selectedMusic?.start else{return nil}
-        if let id=project.styleReferenceId {guard let ref=globalAssets.references.first(where:{$0.id==id}),ref.name==manifest.styleReference?.name else{return nil}}
-        let logo=(project.includeLogoInReview != false) ? (try? resolvedLogo(project,root:root)):nil
-        if let logo {guard (try? fingerprint(logo,job:JobControl()))==manifest.projectLogo?.sha256 else{return nil}}
-        else if manifest.projectLogo != nil {return nil}
+        guard fileSize(u)>0,
+              let manifest=try? readJSON(ReviewManifest.self,root.appendingPathComponent("For AI/manifest.json")),
+              project.reviewManifestIsCurrent(manifest,assets:globalAssets,root:root) else{return nil}
         return u
     }
     func copyUploadZIP() {

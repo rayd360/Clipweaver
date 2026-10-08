@@ -25,7 +25,8 @@ func cameraReviewInput(_ supplied: URL) throws -> URL {
     guard matches.count == 1, let review = matches.first else {
         throw WeaverError("Add the matching .LRF camera preview for \(supplied.lastPathComponent). Keep its original filename so the timestamps identify the correct OSV in DJI Studio.")
     }
-    return review
+    // Keep the supplied folder spelling when macOS enumerates a symlinked directory.
+    return supplied.deletingLastPathComponent().appendingPathComponent(review.lastPathComponent)
 }
 
 func cameraActivityPrompt(_ project: Project, root: URL?) -> String {
