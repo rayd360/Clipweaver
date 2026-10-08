@@ -20,7 +20,7 @@ Continue in the existing repository folder. On the development Mac, the local-on
 
 Installed and built release: **6.1.1**, bundle build **9**. The installer places ClipWeaver in the user’s Applications folder; build output is `build/ClipWeaver.app`. User projects and shared libraries use the standard locations implemented in Projects.swift and GlobalLibrary.swift. Editor instructions live in `skill/clipweaver-editor` and are bundled/installed by the scripts.
 
-Repository: local `main` tracks `origin/main`, `https://github.com/rayd360/Clipweaver`, public by user choice. Pre-update checkpoint: `37946373ad6f8a4ecefc69b46d233b0b3bbb2d39`. LRF source milestone `367ef59eb186749bb5734a2ed3b577a21885bc1f` reached GitHub main; its complete tree matched the staged local source. Final public notes omit local environment details. No uncommitted program work remains at completion; recheck `git status` and remote state before synchronization, and use `git log -1` for the latest notes revision.
+Repository: local `main` tracks `origin/main`, `https://github.com/rayd360/Clipweaver`, public by user choice. Pre-repair checkpoint: `40655f14ef9de1d042247139cd6f7b40e1084984`. LRF source milestone `367ef59eb186749bb5734a2ed3b577a21885bc1f` reached GitHub main; its complete tree matched the staged local source. Preparation repair `9bc4712bd3bfa8c233fc0d9c3bc682322fef3acd` reached GitHub main and its complete tree matched staged local source. Final note updates follow the repair. Public notes omit local environment details. No uncommitted program work remains at completion; recheck `git status` and remote state before synchronization, and use `git log -1` for the latest notes revision.
 
 ## Essential behavior and invariants
 
@@ -65,4 +65,4 @@ Measured real LRF: 17,557,399 bytes became a 547,726-byte review video, excludin
 
 On 2026-10-07 the 6.1.1 repair passed camera readiness checks, ignored creative-setting checks, stale-package rejection, initial/repeated ZIP preparation, and V6 regressions. Installed UI preparation completed and automatically copied its ZIP; a previously prepared real package was recognized and copied without rebuilding. Existing project/library records and completed ZIP remained unchanged. Installed/build binaries match and signature verifies. See tests/LRF-TIMESTAMP-TESTS.md.
 
-Current task: finish verifying the GitHub repair checkpoint. No unanswered product decision.
+The preparation repair, installation and verified GitHub backup are complete. No required work or unanswered product decision remains; the next change has not been requested.
